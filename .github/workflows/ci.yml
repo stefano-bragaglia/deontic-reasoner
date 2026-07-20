@@ -1,0 +1,22 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [main, "feature/**"]
+  push:
+    branches: ["story/**"]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+        with:
+          python-version: "3.14"
+      - run: uv sync --all-extras --dev
+      - run: uv run ruff check
+      - run: uv run radon cc -n B src tests
+      - run: uv run pytest --cov=src/deontic_reasoner --cov-fail-under=90
+      - run: uv run coverage json -o coverage.json -q
+      - run: uv run python scripts/check_file_coverage.py

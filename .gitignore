@@ -1,0 +1,27 @@
+# Python
+__pycache__/
+*.pyc
+*.egg-info/
+dist/
+build/
+
+# venv
+.venv/
+
+# Coverage / test
+.coverage
+htmlcov/
+coverage.json
+.pytest_cache/
+
+# Editors / OS
+.idea/
+.DS_Store
+.env
+
+# Defense-in-depth: these should never exist inside project/, but ignore them
+# in case anything is ever copied across the vault/code boundary.
+meta/
+.claude/
+CLAUDE.md
+Notes.md
