@@ -21,6 +21,7 @@ convention = "pep257"
 
 [tool.ruff.lint.per-file-ignores]
 "tests/*" = ["D"]
+"**/__init__.py" = ["D104"]
 
 [tool.pydoclint]
 style = "sphinx"
