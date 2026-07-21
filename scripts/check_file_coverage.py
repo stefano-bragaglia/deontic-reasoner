@@ -14,6 +14,10 @@ MIN_COVERAGE = 90.0
 
 
 def main() -> int:
+    """Check every file in ``coverage.json`` against ``MIN_COVERAGE`` and report offenders.
+
+    :return: 0 if every file meets ``MIN_COVERAGE``, 1 otherwise
+    """
     coverage_path = Path("coverage.json")
     data = json.loads(coverage_path.read_text())
 
