@@ -17,6 +17,7 @@ jobs:
       - run: uv sync --all-extras --dev
       - run: uv run ruff check
       - run: uv run radon cc -n B src tests
+      - run: uv run pydoclint src
       - run: uv run pytest --cov=src/deontic_reasoner --cov-fail-under=90
       - run: uv run coverage json -o coverage.json -q
       - run: uv run python scripts/check_file_coverage.py
