@@ -8,7 +8,9 @@ violation atom in the revoke rule's body, the same conjunction technique used fo
 other conditional obligation in this framework.
 """
 
-from deontic_reasoner.models import Atom, Rule
+from datetime import datetime
+
+from deontic_reasoner.models import Atom, Norm, Relation, Rule
 
 OBLIGATION_WEIGHT = 1000.0
 """The default weight of a delegation obligation rule, high enough to dominate typical
@@ -66,3 +68,44 @@ def ground_delegation(
         body=frozenset({delegation_atom}), head=frozenset({liability_atom}), weight=weight
     )
     return audit_rule, revoke_rule, liable_rule
+
+
+def exercise_power(
+    power_norm: Norm,
+    subject: str,
+    relation: Relation,
+    action: str,
+    resource: str,
+    counterparty: str | None = None,
+    valid_from: datetime | None = None,
+    valid_until: datetime | None = None,
+    condition: Atom | None = None,
+) -> Norm:
+    """Construct the new norm a Hohfeldian power's exercise brings into existence.
+
+    :param power_norm: the norm granting the power being exercised
+    :param subject: the agent the new norm is about
+    :param relation: which Hohfeldian incident the new norm asserts
+    :param action: the action the new norm concerns
+    :param resource: the resource the action targets
+    :param counterparty: the correlative bearer of the new norm, if directed
+    :param valid_from: the earliest time the new norm applies
+    :param valid_until: the latest time the new norm applies
+    :param condition: an additional named applicability guard for the new norm
+    :return: a new :class:`Norm` whose ``id`` is a deterministic function of
+        ``power_norm.id``, ``subject``, ``relation``, ``action``, ``resource``, and
+        ``counterparty`` — calling this twice with identical arguments returns two equal
+        norms, so feeding the result into a forward-chaining loop twice is a no-op
+    """
+    new_id = f"exercise:{power_norm.id}:{subject}:{relation}:{action}:{resource}:{counterparty}"
+    return Norm(
+        id=new_id,
+        relation=relation,
+        subject=subject,
+        action=action,
+        resource=resource,
+        counterparty=counterparty,
+        valid_from=valid_from,
+        valid_until=valid_until,
+        condition=condition,
+    )
