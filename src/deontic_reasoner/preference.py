@@ -6,6 +6,7 @@ superseded SAT-based conflict detection and combining algorithms: which world "w
 out of comparing violated-rule sets, no separate machinery needed.
 """
 
+import itertools
 from collections.abc import Iterable
 from enum import Enum, auto
 
@@ -94,3 +95,48 @@ def preferred(
     if criterion is PreferenceCriterion.COUNT:
         return len(violated_a) <= len(violated_b)
     return _total_weight(violated_a) <= _total_weight(violated_b)
+
+
+def best_worlds(
+    antecedent: World,
+    rules: Iterable[Rule],
+    hard_constraints: Iterable[HardConstraint] = (),
+    criterion: PreferenceCriterion = PreferenceCriterion.WEIGHTED_COUNT,
+) -> set[World]:
+    """Compute the most-preferred worlds satisfying ``antecedent``.
+
+    Enumeration is scoped to the atoms actually mentioned in ``antecedent`` or any rule's
+    ``body``/``head`` — not the full atom vocabulary the caller has ever used — since an
+    atom appearing in neither cannot affect which world is preferred.
+
+    :param antecedent: the atoms every candidate world must satisfy
+    :param rules: the rules candidate worlds are evaluated against
+    :param hard_constraints: constraints that exclude a candidate world entirely,
+        regardless of how preferred it would otherwise be
+    :param criterion: which :class:`PreferenceCriterion` to compare candidates under
+    :return: every candidate world no other candidate strictly dominates; empty if every
+        antecedent-satisfying world is excluded by a hard constraint
+    """
+    rules = list(rules)
+    hard_constraints = list(hard_constraints)
+    relevant_atoms = set(antecedent)
+    for rule in rules:
+        relevant_atoms |= rule.body | rule.head
+    varying_atoms = sorted(relevant_atoms - set(antecedent))
+
+    candidates = []
+    for bits in itertools.product((False, True), repeat=len(varying_atoms)):
+        extra = {atom for atom, bit in zip(varying_atoms, bits, strict=True) if bit}
+        world = World(antecedent) | World(extra)
+        if not any(excludes(constraint, world) for constraint in hard_constraints):
+            candidates.append(world)
+
+    return {
+        candidate
+        for candidate in candidates
+        if not any(
+            preferred(other, candidate, rules, criterion)
+            and not preferred(candidate, other, rules, criterion)
+            for other in candidates
+        )
+    }
