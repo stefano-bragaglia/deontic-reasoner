@@ -7,7 +7,7 @@ Hohfeldian + deontic-logic semantic reasoner for AI agent permission governance.
 
 ## Visuals
 
-<!-- Add a logo/diagram here (e.g. project/docs/logo.png) once one exists. -->
+![Duty Free](docs/logo.png)
 
 ## Prerequisites
 
