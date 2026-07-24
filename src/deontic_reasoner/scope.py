@@ -6,6 +6,7 @@ is what makes it structurally impossible to execute arbitrary code via a conditi
 """
 
 from collections.abc import Callable, Mapping
+from datetime import datetime
 
 from deontic_reasoner.models import Norm
 
@@ -32,3 +33,26 @@ def evaluate_condition(norm: Norm, request: Mapping[str, object], registry: Pred
     if predicate is None:
         raise UnknownPredicateError(norm.condition)
     return predicate(norm, request)
+
+
+def scope_matches(
+    norm: Norm,
+    request: Mapping[str, object],
+    registry: PredicateRegistry,
+    now: datetime,
+) -> bool:
+    """Check whether ``norm`` applies at ``now`` to ``request``, re-evaluated fresh each call.
+
+    :param norm: the norm whose scope is being checked
+    :param request: the context passed through to :func:`evaluate_condition`
+    :param registry: the fixed, engine-owned predicate registry
+    :param now: the time to check ``norm``'s temporal bounds against
+    :return: ``True`` iff ``now`` falls within ``norm``'s ``valid_from``/``valid_until`` bounds
+        (inclusive on both ends) and :func:`evaluate_condition` also holds (which may itself
+        raise :class:`UnknownPredicateError`)
+    """
+    if norm.valid_from is not None and now < norm.valid_from:
+        return False
+    if norm.valid_until is not None and now > norm.valid_until:
+        return False
+    return evaluate_condition(norm, request, registry)
